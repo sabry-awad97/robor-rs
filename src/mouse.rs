@@ -124,8 +124,17 @@ impl Mouse {
         }
     }
 
-    pub fn get_position(&self) -> (i32, i32) {
+    pub fn get_mouse_position(&self) -> (i32, i32) {
         (self.position.x, self.position.y)
+    }
+
+    pub fn get_current_position(&mut self) -> (i32, i32) {
+        unsafe {
+            let mut point: POINT = std::mem::zeroed();
+            GetCursorPos(&mut point);
+            self.position = MousePosition::new(point.x, point.y);
+            (self.position.x, self.position.y)
+        }
     }
 
     pub fn move_to(&mut self, x: i32, y: i32) -> Result<(), MouseError> {
@@ -165,7 +174,7 @@ impl Mouse {
             return Err(MouseError::OutOfBounds);
         }
 
-        let current_position = self.get_position();
+        let current_position = self.get_mouse_position();
 
         let start_x = current_position.0 as f64;
         let start_y = current_position.1 as f64;
@@ -206,7 +215,7 @@ impl Mouse {
         if radius <= 0 || duration.as_secs() == 0 {
             return Err(MouseError::InvalidInput);
         }
-    
+
         let start_time = std::time::Instant::now();
         let mut last_progress = 0.0;
         loop {
@@ -525,8 +534,15 @@ mod tests {
     #[test]
     fn test_mouse_get_position() {
         let mouse = Mouse::new();
-        let (x, y) = mouse.get_position();
+        let (x, y) = mouse.get_mouse_position();
         assert!(x >= 0 && y >= 0);
+    }
+
+    #[test]
+    fn test_get_current_position() {
+        let mut mouse = Mouse::new();
+        let (x, y) = mouse.get_current_position();
+        assert!(x >= 0 && y >= 0, "Mouse position should be non-negative");
     }
 
     #[test]
@@ -534,7 +550,7 @@ mod tests {
         let mut mouse = Mouse::new();
         let result = mouse.move_to(100, 200);
         assert!(result.is_ok());
-        assert_eq!(mouse.get_position(), (100, 200));
+        assert_eq!(mouse.get_mouse_position(), (100, 200));
     }
 
     #[test]
@@ -584,10 +600,10 @@ mod tests {
     #[test]
     fn test_hover_moves_mouse() {
         let mut mouse = Mouse::new();
-        let start_position = mouse.get_position();
+        let start_position = mouse.get_mouse_position();
         let result = mouse.hover(50, 50, std::time::Duration::from_secs(1));
         assert!(result.is_ok());
-        let end_position = mouse.get_position();
+        let end_position = mouse.get_mouse_position();
         assert_ne!(start_position, end_position);
     }
 
@@ -694,7 +710,7 @@ mod tests {
         let mut mouse = Mouse::new();
         mouse.move_to(100, 100).unwrap();
         mouse.drag(50, 50).unwrap();
-        let (x, y) = mouse.get_position();
+        let (x, y) = mouse.get_mouse_position();
         assert_eq!(x, 150);
         assert_eq!(y, 150);
     }
