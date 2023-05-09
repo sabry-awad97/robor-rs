@@ -3,7 +3,7 @@ use winapi::{
     shared::windef::POINT,
     um::winuser::{
         mouse_event, GetCursorPos, GetSystemMetrics, SetCursorPos, MOUSEEVENTF_LEFTDOWN,
-        MOUSEEVENTF_LEFTUP, SM_CXSCREEN, SM_CYSCREEN,
+        MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, SM_CXSCREEN, SM_CYSCREEN,
     },
 };
 
@@ -203,6 +203,17 @@ impl Mouse {
         }
         Ok(())
     }
+
+    pub fn right_click(&mut self) -> Result<(), MouseError> {
+        let new_position = &self.position;
+        if new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+        let (x_u32, y_u32) = new_position.to_u32()?;
+        unsafe { mouse_event(MOUSEEVENTF_RIGHTDOWN, x_u32, y_u32, 0, 0) };
+        unsafe { mouse_event(MOUSEEVENTF_RIGHTUP, x_u32, y_u32, 0, 0) };
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -386,5 +397,12 @@ mod tests {
         let mut mouse = Mouse::new();
         mouse.move_to(100, 100).unwrap();
         assert!(mouse.multi_click(3).is_ok());
+    }
+
+    #[test]
+    fn test_right_click() {
+        let mut mouse = Mouse::new();
+        mouse.move_to(100, 100).unwrap();
+        assert!(mouse.right_click().is_ok());
     }
 }
