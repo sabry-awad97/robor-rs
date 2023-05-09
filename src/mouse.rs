@@ -233,6 +233,35 @@ impl Mouse {
         }
         Ok(())
     }
+
+    pub fn scroll_with_delay(
+        &mut self,
+        amount: i32,
+        delay: std::time::Duration,
+    ) -> Result<(), MouseError> {
+        if self.position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+        let (x_u32, y_u32) = self.position.to_u32()?;
+        let step = amount.signum();
+        let mut remaining = amount.abs();
+        while remaining != 0 {
+            let scroll_amount = std::cmp::min(remaining, step.abs());
+            let scroll_direction = if amount < 0 { -1 } else { 1 };
+            unsafe {
+                mouse_event(
+                    MOUSEEVENTF_WHEEL,
+                    x_u32,
+                    y_u32,
+                    (scroll_amount * scroll_direction) as u32,
+                    0,
+                )
+            };
+            remaining -= scroll_amount;
+            std::thread::sleep(delay);
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -442,5 +471,33 @@ mod tests {
     fn test_scroll_horizontal_negative_distance() {
         let mut mouse = Mouse::new();
         assert!(mouse.scroll_horizontal(-5).is_ok());
+    }
+
+    #[test]
+    fn test_scroll_with_delay_within_bounds() {
+        let mut mouse = Mouse::new();
+        let result = mouse.scroll_with_delay(120, std::time::Duration::from_millis(10));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_scroll_with_delay_zero_amount() {
+        let mut mouse = Mouse::new();
+        let result = mouse.scroll_with_delay(0, std::time::Duration::from_millis(10));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_scroll_with_delay_positive_amount() {
+        let mut mouse = Mouse::new();
+        let result = mouse.scroll_with_delay(120, std::time::Duration::from_millis(10));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_scroll_with_delay_negative_amount() {
+        let mut mouse = Mouse::new();
+        let result = mouse.scroll_with_delay(-120, std::time::Duration::from_millis(10));
+        assert!(result.is_ok());
     }
 }
