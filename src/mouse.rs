@@ -6,6 +6,7 @@ use winapi::{
 
 #[derive(Debug)]
 pub enum MouseError {
+    InvalidInput,
     ConversionError(String),
     IoError(io::Error),
     OutOfBounds,
@@ -14,6 +15,7 @@ pub enum MouseError {
 impl fmt::Display for MouseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            MouseError::InvalidInput => write!(f, "Invalid input"),
             MouseError::ConversionError(msg) => write!(f, "Conversion error: {}", msg),
             MouseError::IoError(err) => write!(f, "IO error: {}", err),
             MouseError::OutOfBounds => write!(f, "Mouse position out of bounds"),
@@ -82,6 +84,10 @@ impl Mouse {
     }
 
     pub fn move_to(&mut self, x: i32, y: i32) -> Result<(), MouseError> {
+        if x < 0 || y < 0 {
+            return Err(MouseError::InvalidInput);
+        }
+
         let new_position = MousePosition::new(x, y);
         if new_position.is_out_of_bounds() {
             return Err(MouseError::OutOfBounds);
@@ -105,6 +111,10 @@ impl Mouse {
         y: i32,
         duration: std::time::Duration,
     ) -> Result<(), MouseError> {
+        if x < 0 || y < 0 || duration.as_secs() == 0 {
+            return Err(MouseError::InvalidInput);
+        }
+        
         let new_position = MousePosition::new(x, y);
         if new_position.is_out_of_bounds() {
             return Err(MouseError::OutOfBounds);
