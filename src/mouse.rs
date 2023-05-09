@@ -144,6 +144,29 @@ impl Mouse {
         self.move_to(x, y)?;
         Ok(())
     }
+
+    pub fn move_in_circle(
+        &mut self,
+        center_x: i32,
+        center_y: i32,
+        radius: i32,
+        duration: std::time::Duration,
+    ) -> Result<(), MouseError> {
+        if radius <= 0 || duration.as_secs() == 0 {
+            return Err(MouseError::InvalidInput);
+        }
+    
+        let start_time = std::time::Instant::now();
+        while start_time.elapsed() < duration {
+            let elapsed = start_time.elapsed().as_secs_f64();
+            let angle = elapsed * 2.0 * std::f64::consts::PI / duration.as_secs_f64();
+            let x = center_x + (radius as f64 * angle.cos()) as i32;
+            let y = center_y + (radius as f64 * angle.sin()) as i32;
+            self.move_to(x, y)?;
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
