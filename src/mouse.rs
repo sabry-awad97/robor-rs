@@ -339,29 +339,45 @@ impl Mouse {
     ) -> Result<(), MouseError> {
         let current_position = &self.position;
         let new_position = current_position.offset(distance_x, distance_y);
+    
         if current_position.is_out_of_bounds() || new_position.is_out_of_bounds() {
             return Err(MouseError::OutOfBounds);
         }
+    
         let (current_x, current_y) = current_position.to_u32()?;
         let (new_x, new_y) = new_position.to_u32()?;
-        unsafe { mouse_event(MOUSEEVENTF_LEFTDOWN, current_x, current_y, 0, 0) };
+    
         let start_x = current_x as f64;
         let start_y = current_y as f64;
+    
         let distance_x = new_x as f64 - start_x;
         let distance_y = new_y as f64 - start_y;
+    
         let total_distance = (distance_x.powi(2) + distance_y.powi(2)).sqrt();
+    
+        unsafe { mouse_event(MOUSEEVENTF_LEFTDOWN, current_x, current_y, 0, 0) };
+    
         let start_time = std::time::Instant::now();
-        while start_time.elapsed() < duration {
+        let mut last_progress = 0.0;
+        loop {
             let elapsed = start_time.elapsed().as_secs_f64();
             let progress = elapsed / duration.as_secs_f64();
-            let current_distance = total_distance * progress;
-            let current_x = ((current_distance / total_distance) * distance_x + start_x) as i32;
-            let current_y = ((current_distance / total_distance) * distance_y + start_y) as i32;
-            self.move_to(current_x, current_y)?;
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            if progress >= 1.0 {
+                break;
+            }
+            if progress - last_progress >= 0.01 {
+                let current_distance = total_distance * progress;
+                let current_x = ((current_distance / total_distance) * distance_x + start_x) as i32;
+                let current_y = ((current_distance / total_distance) * distance_y + start_y) as i32;
+                self.move_to(current_x, current_y)?;
+                last_progress = progress;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
         }
+    
         unsafe { mouse_event(MOUSEEVENTF_LEFTUP, new_x, new_y, 0, 0) };
         self.position = new_position;
+    
         Ok(())
     }
 
