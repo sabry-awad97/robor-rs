@@ -362,6 +362,12 @@ impl Mouse {
         let state = unsafe { GetAsyncKeyState(VK_MBUTTON) } as u32;
         state & 0x8001 != 0
     }
+
+    pub fn get_screen_size(&self) -> (i32, i32) {
+        let screen_width = unsafe { GetSystemMetrics(SM_CXSCREEN) };
+        let screen_height = unsafe { GetSystemMetrics(SM_CYSCREEN) };
+        (screen_width, screen_height)
+    }
 }
 
 #[cfg(test)]
@@ -696,5 +702,13 @@ mod tests {
         mouse.click().unwrap();
         let count = counter.lock().unwrap();
         assert_eq!(*count, 3);
+    }
+
+    #[test]
+    fn test_get_screen_size() {
+        let mouse = Mouse::new();
+        let (width, height) = mouse.get_screen_size();
+        assert!(width > 0);
+        assert!(height > 0);
     }
 }
