@@ -1,7 +1,10 @@
 use std::{fmt, io};
 use winapi::{
     shared::windef::POINT,
-    um::winuser::{GetCursorPos, GetSystemMetrics, SetCursorPos, SM_CXSCREEN, SM_CYSCREEN},
+    um::winuser::{
+        mouse_event, GetCursorPos, GetSystemMetrics, SetCursorPos, MOUSEEVENTF_LEFTDOWN,
+        MOUSEEVENTF_LEFTUP, SM_CXSCREEN, SM_CYSCREEN,
+    },
 };
 
 #[derive(Debug)]
@@ -114,7 +117,7 @@ impl Mouse {
         if x < 0 || y < 0 || duration.as_secs() == 0 {
             return Err(MouseError::InvalidInput);
         }
-        
+
         let new_position = MousePosition::new(x, y);
         if new_position.is_out_of_bounds() {
             return Err(MouseError::OutOfBounds);
@@ -155,7 +158,7 @@ impl Mouse {
         if radius <= 0 || duration.as_secs() == 0 {
             return Err(MouseError::InvalidInput);
         }
-    
+
         let start_time = std::time::Instant::now();
         while start_time.elapsed() < duration {
             let elapsed = start_time.elapsed().as_secs_f64();
@@ -165,6 +168,17 @@ impl Mouse {
             self.move_to(x, y)?;
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
+        Ok(())
+    }
+
+    pub fn click(&mut self) -> Result<(), MouseError> {
+        let new_position = &self.position;
+        if new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+        let (x_u32, y_u32) = new_position.to_u32()?;
+        unsafe { mouse_event(MOUSEEVENTF_LEFTDOWN, x_u32, y_u32, 0, 0) };
+        unsafe { mouse_event(MOUSEEVENTF_LEFTUP, x_u32, y_u32, 0, 0) };
         Ok(())
     }
 }
@@ -331,5 +345,11 @@ mod tests {
         let mut mouse = Mouse::new();
         let result = mouse.move_in_circle(0, 0, 50, std::time::Duration::from_secs(0));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_click_within_bounds() {
+        let mut mouse = Mouse::new();
+        assert!(mouse.click().is_ok());
     }
 }
