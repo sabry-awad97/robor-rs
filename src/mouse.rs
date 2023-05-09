@@ -187,6 +187,22 @@ impl Mouse {
         std::thread::sleep(std::time::Duration::from_millis(50));
         self.click()
     }
+
+    pub fn multi_click(&mut self, count: usize) -> Result<(), MouseError> {
+        let new_position = &self.position;
+        if new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+        let (x_u32, y_u32) = new_position.to_u32()?;
+        for _ in 0..count {
+            unsafe {
+                mouse_event(MOUSEEVENTF_LEFTDOWN, x_u32, y_u32, 0, 0);
+                mouse_event(MOUSEEVENTF_LEFTUP, x_u32, y_u32, 0, 0)
+            };
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -363,5 +379,12 @@ mod tests {
     fn test_double_click() {
         let mut mouse = Mouse::new();
         assert!(mouse.double_click().is_ok());
+    }
+
+    #[test]
+    fn test_multi_click_within_bounds() {
+        let mut mouse = Mouse::new();
+        mouse.move_to(100, 100).unwrap();
+        assert!(mouse.multi_click(3).is_ok());
     }
 }
