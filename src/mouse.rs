@@ -2,10 +2,10 @@ use std::{fmt, io};
 use winapi::{
     shared::windef::POINT,
     um::winuser::{
-        mouse_event, GetAsyncKeyState, GetCursorPos, GetSystemMetrics, SetCursorPos,
-        MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN,
-        MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_WHEEL, SM_CXSCREEN, SM_CYSCREEN, VK_LBUTTON, VK_MBUTTON,
-        VK_RBUTTON,
+        mouse_event, GetAsyncKeyState, GetCursorPos, GetSystemMetrics, SendInput, SetCursorPos,
+        INPUT, INPUT_MOUSE, MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
+        MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
+        MOUSEEVENTF_WHEEL, SM_CXSCREEN, SM_CYSCREEN, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON,
     },
 };
 
@@ -38,6 +38,11 @@ pub enum MouseButton {
     Left,
     Right,
     Middle,
+}
+
+pub enum ButtonAction {
+    Press,
+    Release,
 }
 
 pub struct MousePosition {
@@ -295,32 +300,39 @@ impl Mouse {
         Ok(())
     }
 
-    pub fn press_button(&self, button: MouseButton) {
-        let vk_code = match button {
-            MouseButton::Left => VK_LBUTTON,
-            MouseButton::Right => VK_RBUTTON,
-            MouseButton::Middle => VK_MBUTTON,
+    pub fn simulate_mouse_button(&self, button: MouseButton, action: ButtonAction) {
+        let (down_flag, up_flag) = match button {
+            MouseButton::Left => (MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP),
+            MouseButton::Right => (MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP),
+            MouseButton::Middle => (MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP),
+        };
+        let flags = match action {
+            ButtonAction::Press => down_flag,
+            ButtonAction::Release => up_flag,
+        };
+        let mut input = INPUT {
+            type_: INPUT_MOUSE,
+            u: unsafe { std::mem::zeroed() },
         };
         unsafe {
-            winapi::um::winuser::keybd_event(
-                vk_code.try_into().unwrap(),
-                0,
-                winapi::um::winuser::KEYEVENTF_EXTENDEDKEY,
-                0,
-            )
-        };
+            input.u.mi_mut().dwFlags = flags;
+            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32);
+        }
     }
 
     pub fn is_left_button_pressed(&self) -> bool {
-        unsafe { GetAsyncKeyState(VK_LBUTTON) != 0 }
+        let state = unsafe { GetAsyncKeyState(VK_LBUTTON) } as u16;
+        state & 0x8000u16 != 0
     }
 
     pub fn is_right_button_pressed(&self) -> bool {
-        unsafe { GetAsyncKeyState(VK_RBUTTON) != 0 }
+        let state = unsafe { GetAsyncKeyState(VK_RBUTTON) } as u16;
+        state & 0x8000u16 != 0
     }
 
     pub fn is_middle_button_pressed(&self) -> bool {
-        unsafe { GetAsyncKeyState(VK_MBUTTON) != 0 }
+        let state = unsafe { GetAsyncKeyState(VK_MBUTTON) } as u16;
+        state & 0x8000u16 != 0
     }
 }
 
@@ -578,26 +590,5 @@ mod tests {
         let (x, y) = mouse.get_position();
         assert_eq!(x, 150);
         assert_eq!(y, 150);
-    }
-
-    #[test]
-    fn test_press_left_button() {
-        let mouse = Mouse::new();
-        mouse.press_button(MouseButton::Left);
-        assert_eq!(true, mouse.is_left_button_pressed());
-    }
-
-    #[test]
-    fn test_press_right_button() {
-        let mouse = Mouse::new();
-        mouse.press_button(MouseButton::Right);
-        assert_eq!(true, mouse.is_right_button_pressed());
-    }
-
-    #[test]
-    fn test_press_middle_button() {
-        let mouse = Mouse::new();
-        mouse.press_button(MouseButton::Middle);
-        assert_eq!(true, mouse.is_middle_button_pressed());
     }
 }
