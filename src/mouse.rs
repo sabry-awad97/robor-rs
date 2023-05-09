@@ -181,6 +181,12 @@ impl Mouse {
         unsafe { mouse_event(MOUSEEVENTF_LEFTUP, x_u32, y_u32, 0, 0) };
         Ok(())
     }
+
+    pub fn double_click(&mut self) -> Result<(), MouseError> {
+        self.click()?;
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        self.click()
+    }
 }
 
 #[cfg(test)]
@@ -351,5 +357,11 @@ mod tests {
     fn test_click_within_bounds() {
         let mut mouse = Mouse::new();
         assert!(mouse.click().is_ok());
+    }
+
+    #[test]
+    fn test_double_click() {
+        let mut mouse = Mouse::new();
+        assert!(mouse.double_click().is_ok());
     }
 }
