@@ -177,4 +177,11 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(mouse.get_position(), (100, 200));
     }
+
+    #[test]
+    fn test_mouse_move_to_out_of_bounds() {
+        let mut mouse = Mouse::new();
+        let result = mouse.move_to(-1, 500);
+        assert!(result.is_err());
+    }
 }
