@@ -314,6 +314,10 @@ impl Mouse {
     pub fn is_left_button_pressed(&self) -> bool {
         unsafe { GetAsyncKeyState(VK_LBUTTON) != 0 }
     }
+
+    pub fn is_right_button_pressed(&self) -> bool {
+        unsafe { GetAsyncKeyState(VK_RBUTTON) != 0 }
+    }
 }
 
 #[cfg(test)]
@@ -577,5 +581,12 @@ mod tests {
         let mouse = Mouse::new();
         mouse.press_button(MouseButton::Left);
         assert_eq!(true, mouse.is_left_button_pressed());
+    }
+
+    #[test]
+    fn test_press_right_button() {
+        let mouse = Mouse::new();
+        mouse.press_button(MouseButton::Right);
+        assert_eq!(true, mouse.is_right_button_pressed());
     }
 }
