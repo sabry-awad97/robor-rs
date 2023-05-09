@@ -76,6 +76,10 @@ impl Mouse {
             position: MousePosition::default(),
         }
     }
+
+    pub fn get_position(&self) -> (i32, i32) {
+        (self.position.x, self.position.y)
+    }
 }
 
 #[cfg(test)]
@@ -133,5 +137,12 @@ mod tests {
         let mouse = Mouse::new();
         assert!(mouse.position.x >= 0);
         assert!(mouse.position.y >= 0);
+    }
+
+    #[test]
+    fn test_mouse_get_position() {
+        let mouse = Mouse::new();
+        let (x, y) = mouse.get_position();
+        assert!(x >= 0 && y >= 0);
     }
 }
