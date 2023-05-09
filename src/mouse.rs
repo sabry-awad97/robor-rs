@@ -1,4 +1,7 @@
-use std::{fmt, io};
+use std::{
+    fmt::{self, Display},
+    io,
+};
 use winapi::{
     shared::windef::POINT,
     um::winuser::{
@@ -89,6 +92,18 @@ impl Default for MousePosition {
             let mut point: POINT = std::mem::zeroed();
             GetCursorPos(&mut point);
             Self::new(point.x, point.y)
+        }
+    }
+}
+
+pub enum EventType {
+    Click,
+}
+
+impl Display for EventType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            EventType::Click => write!(f, "Click"),
         }
     }
 }
@@ -195,10 +210,11 @@ impl Mouse {
         Ok(())
     }
 
-    pub fn on<F>(&mut self, event_name: &str, listener: F)
+    pub fn on<F>(&mut self, event_type: EventType, listener: F)
     where
         F: Fn() + 'static + Send + Sync,
     {
+        let event_name = &event_type.to_string();
         self.event_emitter.on(event_name, listener);
     }
 
@@ -210,7 +226,7 @@ impl Mouse {
         let (x_u32, y_u32) = new_position.to_u32()?;
         unsafe { mouse_event(MOUSEEVENTF_LEFTDOWN, x_u32, y_u32, 0, 0) };
         unsafe { mouse_event(MOUSEEVENTF_LEFTUP, x_u32, y_u32, 0, 0) };
-        self.event_emitter.emit("click");
+        self.event_emitter.emit(&EventType::Click.to_string());
         Ok(())
     }
 
