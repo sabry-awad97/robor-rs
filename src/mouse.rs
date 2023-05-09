@@ -1,5 +1,8 @@
 use std::{fmt, io};
-use winapi::{shared::windef::POINT, um::winuser::GetCursorPos};
+use winapi::{
+    shared::windef::POINT,
+    um::winuser::{GetCursorPos, GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN},
+};
 
 #[derive(Debug)]
 pub enum MouseError {
@@ -32,6 +35,12 @@ pub struct MousePosition {
 impl MousePosition {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    pub fn is_out_of_bounds(&self) -> bool {
+        let screen_width = unsafe { GetSystemMetrics(SM_CXSCREEN) };
+        let screen_height = unsafe { GetSystemMetrics(SM_CYSCREEN) };
+        self.x < 0 || self.y < 0 || self.x > screen_width || self.y > screen_height
     }
 
     pub fn to_u32(&self) -> Result<(u32, u32), MouseError> {
@@ -85,6 +94,24 @@ mod tests {
         let position = MousePosition::default();
         assert!(position.x >= 0);
         assert!(position.y >= 0);
+    }
+
+    #[test]
+    fn test_is_out_of_bounds() {
+        let mouse_pos = MousePosition::new(-10, 20);
+        assert!(mouse_pos.is_out_of_bounds());
+
+        let mouse_pos = MousePosition::new(10, -20);
+        assert!(mouse_pos.is_out_of_bounds());
+
+        let screen_width = unsafe { GetSystemMetrics(SM_CXSCREEN) };
+        let screen_height = unsafe { GetSystemMetrics(SM_CYSCREEN) };
+
+        let mouse_pos = MousePosition::new(screen_width + 10, screen_height + 20);
+        assert!(mouse_pos.is_out_of_bounds());
+
+        let mouse_pos = MousePosition::new(screen_width - 10, screen_height - 20);
+        assert!(!mouse_pos.is_out_of_bounds());
     }
 
     #[test]
