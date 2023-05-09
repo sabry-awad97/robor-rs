@@ -144,6 +144,19 @@ mod tests {
     }
 
     #[test]
+    fn test_mouse_position_to_u32_conversion_error() {
+        let position = MousePosition::new(-1, 500);
+        let result = position.to_u32();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_mouse_default_position() {
+        let position = MousePosition::default();
+        assert!(!position.is_out_of_bounds());
+    }
+
+    #[test]
     fn test_mouse_new() {
         let mouse = Mouse::new();
         assert!(mouse.position.x >= 0);
