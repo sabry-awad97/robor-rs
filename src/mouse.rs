@@ -631,4 +631,24 @@ mod tests {
             "Right button should be released"
         );
     }
+
+    #[test]
+    fn test_simulate_middle_button_press() {
+        let mouse = Mouse::new();
+        mouse.simulate_mouse_button(MouseButton::Middle, ButtonAction::Press);
+        assert!(
+            mouse.is_middle_button_pressed(),
+            "Middle button should be pressed"
+        );
+    }
+
+    #[test]
+    fn test_simulate_middle_button_release() {
+        let mouse = Mouse::new();
+        mouse.simulate_mouse_button(MouseButton::Middle, ButtonAction::Release);
+        assert!(
+            !mouse.is_middle_button_pressed(),
+            "Middle button should be released"
+        );
+    }
 }
