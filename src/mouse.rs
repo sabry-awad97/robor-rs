@@ -2,9 +2,10 @@ use std::{fmt, io};
 use winapi::{
     shared::windef::POINT,
     um::winuser::{
-        mouse_event, GetCursorPos, GetSystemMetrics, SetCursorPos, MOUSEEVENTF_HWHEEL,
-        MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
-        MOUSEEVENTF_WHEEL, SM_CXSCREEN, SM_CYSCREEN,
+        mouse_event, GetAsyncKeyState, GetCursorPos, GetSystemMetrics, SetCursorPos,
+        MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN,
+        MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_WHEEL, SM_CXSCREEN, SM_CYSCREEN, VK_LBUTTON, VK_MBUTTON,
+        VK_RBUTTON,
     },
 };
 
@@ -31,6 +32,12 @@ impl From<io::Error> for MouseError {
     fn from(err: io::Error) -> Self {
         MouseError::IoError(err)
     }
+}
+
+pub enum MouseButton {
+    Left,
+    Right,
+    Middle,
 }
 
 pub struct MousePosition {
@@ -286,6 +293,26 @@ impl Mouse {
         self.position = new_position;
 
         Ok(())
+    }
+
+    pub fn press_button(&self, button: MouseButton) {
+        let vk_code = match button {
+            MouseButton::Left => VK_LBUTTON,
+            MouseButton::Right => VK_RBUTTON,
+            MouseButton::Middle => VK_MBUTTON,
+        };
+        unsafe {
+            winapi::um::winuser::keybd_event(
+                vk_code.try_into().unwrap(),
+                0,
+                winapi::um::winuser::KEYEVENTF_EXTENDEDKEY,
+                0,
+            )
+        };
+    }
+
+    pub fn is_left_button_pressed(&self) -> bool {
+        unsafe { GetAsyncKeyState(VK_LBUTTON) != 0 }
     }
 }
 
@@ -543,5 +570,12 @@ mod tests {
         let (x, y) = mouse.get_position();
         assert_eq!(x, 150);
         assert_eq!(y, 150);
+    }
+
+    #[test]
+    fn test_press_left_button() {
+        let mouse = Mouse::new();
+        mouse.press_button(MouseButton::Left);
+        assert_eq!(true, mouse.is_left_button_pressed());
     }
 }
