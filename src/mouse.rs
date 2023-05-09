@@ -99,7 +99,12 @@ impl Mouse {
         Ok(())
     }
 
-    pub fn hover(&mut self, x: i32, y: i32, duration: std::time::Duration) -> Result<(), MouseError> {
+    pub fn hover(
+        &mut self,
+        x: i32,
+        y: i32,
+        duration: std::time::Duration,
+    ) -> Result<(), MouseError> {
         let new_position = MousePosition::new(x, y);
         if new_position.is_out_of_bounds() {
             return Err(MouseError::OutOfBounds);
@@ -242,5 +247,31 @@ mod tests {
         mouse.move_to(100, 100).unwrap();
         let result = mouse.move_relative(-101, -101);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hover_within_bounds() {
+        let mut mouse = Mouse::new();
+        let result = mouse.hover(50, 50, std::time::Duration::from_secs(1));
+        assert!(result.is_ok());
+        assert_eq!(mouse.position.x, 50);
+        assert_eq!(mouse.position.y, 50);
+    }
+
+    #[test]
+    fn test_hover_out_of_bounds() {
+        let mut mouse = Mouse::new();
+        let result = mouse.hover(10000, 10000, std::time::Duration::from_secs(1));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hover_moves_mouse() {
+        let mut mouse = Mouse::new();
+        let start_position = mouse.get_position();
+        let result = mouse.hover(50, 50, std::time::Duration::from_secs(1));
+        assert!(result.is_ok());
+        let end_position = mouse.get_position();
+        assert_ne!(start_position, end_position);
     }
 }
