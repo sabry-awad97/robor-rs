@@ -9,6 +9,8 @@ use winapi::{
     },
 };
 
+use crate::event_emitter::EventEmitter;
+
 #[derive(Debug)]
 pub enum MouseError {
     InvalidInput,
@@ -93,12 +95,14 @@ impl Default for MousePosition {
 
 pub struct Mouse {
     position: MousePosition,
+    event_emitter: EventEmitter,
 }
 
 impl Mouse {
     pub fn new() -> Self {
         Self {
             position: MousePosition::default(),
+            event_emitter: EventEmitter::new(),
         }
     }
 
@@ -191,6 +195,13 @@ impl Mouse {
         Ok(())
     }
 
+    pub fn on<F>(&mut self, event_name: &str, listener: F)
+    where
+        F: Fn() + 'static + Send + Sync,
+    {
+        self.event_emitter.on(event_name, listener);
+    }
+
     pub fn click(&mut self) -> Result<(), MouseError> {
         let new_position = &self.position;
         if new_position.is_out_of_bounds() {
@@ -199,6 +210,7 @@ impl Mouse {
         let (x_u32, y_u32) = new_position.to_u32()?;
         unsafe { mouse_event(MOUSEEVENTF_LEFTDOWN, x_u32, y_u32, 0, 0) };
         unsafe { mouse_event(MOUSEEVENTF_LEFTUP, x_u32, y_u32, 0, 0) };
+        self.event_emitter.emit("click");
         Ok(())
     }
 
