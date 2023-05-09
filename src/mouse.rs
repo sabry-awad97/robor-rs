@@ -3,7 +3,8 @@ use winapi::{
     shared::windef::POINT,
     um::winuser::{
         mouse_event, GetCursorPos, GetSystemMetrics, SetCursorPos, MOUSEEVENTF_LEFTDOWN,
-        MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, SM_CXSCREEN, SM_CYSCREEN,
+        MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_WHEEL,
+        SM_CXSCREEN, SM_CYSCREEN,
     },
 };
 
@@ -214,6 +215,16 @@ impl Mouse {
         unsafe { mouse_event(MOUSEEVENTF_RIGHTUP, x_u32, y_u32, 0, 0) };
         Ok(())
     }
+
+    pub fn scroll(&mut self, amount: i32) -> Result<(), MouseError> {
+        let new_position = &self.position;
+        if new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+        let (x_u32, y_u32) = new_position.to_u32()?;
+        unsafe { mouse_event(MOUSEEVENTF_WHEEL, x_u32, y_u32, amount as u32, 0) };
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -404,5 +415,12 @@ mod tests {
         let mut mouse = Mouse::new();
         mouse.move_to(100, 100).unwrap();
         assert!(mouse.right_click().is_ok());
+    }
+
+    #[test]
+    fn test_scroll() {
+        let mut mouse = Mouse::new();
+        mouse.move_to(800, 800).unwrap();
+        assert!(mouse.scroll(-120).is_ok());
     }
 }
