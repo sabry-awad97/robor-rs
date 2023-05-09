@@ -591,4 +591,24 @@ mod tests {
         assert_eq!(x, 150);
         assert_eq!(y, 150);
     }
+
+    #[test]
+    fn test_simulate_left_button_press() {
+        let mouse = Mouse::new();
+        mouse.simulate_mouse_button(MouseButton::Left, ButtonAction::Press);
+        assert!(
+            mouse.is_left_button_pressed(),
+            "Left button should be pressed"
+        );
+    }
+
+    #[test]
+    fn test_simulate_left_button_release() {
+        let mouse = Mouse::new();
+        mouse.simulate_mouse_button(MouseButton::Left, ButtonAction::Release);
+        assert!(
+            !mouse.is_left_button_pressed(),
+            "Left button should be released"
+        );
+    }
 }
