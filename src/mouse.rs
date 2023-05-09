@@ -21,6 +21,18 @@ impl Default for MousePosition {
     }
 }
 
+pub struct Mouse {
+    position: MousePosition,
+}
+
+impl Mouse {
+    pub fn new() -> Self {
+        Self {
+            position: MousePosition::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
