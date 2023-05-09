@@ -1,4 +1,5 @@
 use std::{
+    error::Error,
     fmt::{self, Display},
     io,
 };
@@ -21,6 +22,8 @@ pub enum MouseError {
     IoError(io::Error),
     OutOfBounds,
 }
+
+impl Error for MouseError {}
 
 impl fmt::Display for MouseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
