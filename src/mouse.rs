@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fmt::{self, Display},
-    io,
+    io::{self, Write},
 };
 use winapi::{
     shared::windef::POINT,
@@ -447,6 +447,22 @@ impl Mouse {
         let screen_width = unsafe { GetSystemMetrics(SM_CXSCREEN) };
         let screen_height = unsafe { GetSystemMetrics(SM_CYSCREEN) };
         (screen_width, screen_height)
+    }
+
+    pub fn print_mouse_position(&self) {
+        println!("Press q to quit.");
+        const VK_Q: i32 = 0x51;
+        loop {
+            let mut point = POINT { x: 0, y: 0 };
+            unsafe { GetCursorPos(&mut point) };
+            let position_str = format!("({}, {})", point.x, point.y);
+            print!("\r{}", position_str);
+            std::io::stdout().flush().unwrap();
+            if unsafe { GetAsyncKeyState(VK_Q) } as u32 & 0x8000 != 0 {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
     }
 }
 
