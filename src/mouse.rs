@@ -2,9 +2,9 @@ use std::{fmt, io};
 use winapi::{
     shared::windef::POINT,
     um::winuser::{
-        mouse_event, GetCursorPos, GetSystemMetrics, SetCursorPos, MOUSEEVENTF_LEFTDOWN,
-        MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_WHEEL,
-        SM_CXSCREEN, SM_CYSCREEN,
+        mouse_event, GetCursorPos, GetSystemMetrics, SetCursorPos, MOUSEEVENTF_HWHEEL,
+        MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
+        MOUSEEVENTF_WHEEL, SM_CXSCREEN, SM_CYSCREEN,
     },
 };
 
@@ -225,6 +225,14 @@ impl Mouse {
         unsafe { mouse_event(MOUSEEVENTF_WHEEL, x_u32, y_u32, amount as u32, 0) };
         Ok(())
     }
+
+    pub fn scroll_horizontal(&mut self, distance: i32) -> Result<(), MouseError> {
+        let params = [0, 0, 0, distance as u32];
+        unsafe {
+            mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, params[3] as u32, 0);
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -422,5 +430,17 @@ mod tests {
         let mut mouse = Mouse::new();
         mouse.move_to(800, 800).unwrap();
         assert!(mouse.scroll(-120).is_ok());
+    }
+
+    #[test]
+    fn test_scroll_horizontal_positive_distance() {
+        let mut mouse = Mouse::new();
+        assert!(mouse.scroll_horizontal(10).is_ok());
+    }
+
+    #[test]
+    fn test_scroll_horizontal_negative_distance() {
+        let mut mouse = Mouse::new();
+        assert!(mouse.scroll_horizontal(-5).is_ok());
     }
 }
