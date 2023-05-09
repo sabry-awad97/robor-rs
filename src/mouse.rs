@@ -38,9 +38,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new() {
-        let mouse_pos = MousePosition::new(10, 20);
-        assert_eq!(mouse_pos.x, 10);
-        assert_eq!(mouse_pos.y, 20);
+    fn test_mouse_position_new() {
+        let position = MousePosition::new(10, 20);
+        assert_eq!(position.x, 10);
+        assert_eq!(position.y, 20);
+    }
+
+    #[test]
+    fn test_mouse_position_default() {
+        let position = MousePosition::default();
+        assert!(position.x >= 0);
+        assert!(position.y >= 0);
+    }
+
+    #[test]
+    fn test_mouse_new() {
+        let mouse = Mouse::new();
+        assert!(mouse.position.x >= 0);
+        assert!(mouse.position.y >= 0);
     }
 }
