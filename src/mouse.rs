@@ -307,4 +307,29 @@ mod tests {
         let end_position = mouse.get_position();
         assert_ne!(start_position, end_position);
     }
+
+    #[test]
+    fn test_move_in_circle() {
+        let mut mouse = Mouse::new();
+        let center_x = 100;
+        let center_y = 100;
+        let radius = 50;
+        let duration = std::time::Duration::from_secs(1);
+        let result = mouse.move_in_circle(center_x, center_y, radius, duration);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_move_in_circle_invalid_radius() {
+        let mut mouse = Mouse::new();
+        let result = mouse.move_in_circle(0, 0, 0, std::time::Duration::from_secs(1));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_move_in_circle_invalid_duration() {
+        let mut mouse = Mouse::new();
+        let result = mouse.move_in_circle(0, 0, 50, std::time::Duration::from_secs(0));
+        assert!(result.is_err());
+    }
 }
