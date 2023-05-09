@@ -1,7 +1,7 @@
 use std::{fmt, io};
 use winapi::{
     shared::windef::POINT,
-    um::winuser::{GetCursorPos, GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN, SetCursorPos},
+    um::winuser::{GetCursorPos, GetSystemMetrics, SetCursorPos, SM_CXSCREEN, SM_CYSCREEN},
 };
 
 #[derive(Debug)]
@@ -89,6 +89,13 @@ impl Mouse {
         let (x_u32, y_u32) = new_position.to_u32()?;
         unsafe { SetCursorPos(x_u32 as i32, y_u32 as i32) };
         self.position = new_position;
+        Ok(())
+    }
+
+    pub fn move_relative(&mut self, distance_x: i32, distance_y: i32) -> Result<(), MouseError> {
+        let new_x = self.position.x + distance_x;
+        let new_y = self.position.y + distance_y;
+        self.move_to(new_x, new_y)?;
         Ok(())
     }
 }
@@ -182,6 +189,27 @@ mod tests {
     fn test_mouse_move_to_out_of_bounds() {
         let mut mouse = Mouse::new();
         let result = mouse.move_to(-1, 500);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_move_relative() {
+        let mut mouse = Mouse::new();
+        mouse.move_to(100, 100).unwrap();
+        mouse.move_relative(10, 20).unwrap();
+        assert_eq!(mouse.position.x, 110);
+        assert_eq!(mouse.position.y, 120);
+
+        mouse.move_relative(-5, -10).unwrap();
+        assert_eq!(mouse.position.x, 105);
+        assert_eq!(mouse.position.y, 110);
+    }
+
+    #[test]
+    fn test_move_relative_error() {
+        let mut mouse = Mouse::new();
+        mouse.move_to(100, 100).unwrap();
+        let result = mouse.move_relative(-101, -101);
         assert!(result.is_err());
     }
 }
