@@ -768,4 +768,28 @@ mod tests {
         assert_eq!(end_x, start_x + distance_x);
         assert_eq!(end_y, start_y + distance_y);
     }
+
+    #[test]
+    fn test_drag_and_drop_with_duration_time_elapsed() {
+        let mut mouse = Mouse::new();
+        let start_x = mouse.position.x;
+        let start_y = mouse.position.y;
+        let distance_x = 100;
+        let distance_y = 50;
+        let duration = std::time::Duration::from_secs(1);
+
+        let start_time = std::time::Instant::now();
+        mouse
+            .drag_and_drop_with_duration(distance_x, distance_y, duration)
+            .unwrap();
+        let end_time = std::time::Instant::now();
+
+        let elapsed_time = end_time - start_time;
+        assert!(elapsed_time >= duration);
+
+        let end_x = mouse.position.x;
+        let end_y = mouse.position.y;
+        assert_eq!(end_x, start_x + distance_x);
+        assert_eq!(end_y, start_y + distance_y);
+    }
 }
