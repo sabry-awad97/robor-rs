@@ -342,25 +342,28 @@ impl Mouse {
         }
 
         let (current_x, current_y) = current_position.to_u32()?;
+        let (new_x, new_y) = new_position.to_u32()?;
 
-        let total_distance = ((distance_x.pow(2) + distance_y.pow(2)) as f64).sqrt();
-        let frames = (duration.as_secs_f64() * 60.0) as usize;
-        let distance_per_frame = total_distance / frames as f64;
+        let start_x = current_x as f64;
+        let start_y = current_y as f64;
 
-        let mut x = current_x as f64;
-        let mut y = current_y as f64;
+        let distance_x = new_x as f64 - start_x;
+        let distance_y = new_y as f64 - start_y;
 
-        for _ in 0..frames {
-            let dx = (distance_x as f64 * distance_per_frame / total_distance) as i32;
-            let dy = (distance_y as f64 * distance_per_frame / total_distance) as i32;
+        let total_distance = (distance_x.powi(2) + distance_y.powi(2)).sqrt();
 
-            x += dx as f64;
-            y += dy as f64;
+        let start_time = std::time::Instant::now();
+        while start_time.elapsed() < duration {
+            let elapsed = start_time.elapsed().as_secs_f64();
+            let progress = elapsed / duration.as_secs_f64();
+            let current_distance = total_distance * progress;
 
-            self.move_to(x as i32, y as i32)?;
-            std::thread::sleep(std::time::Duration::from_secs_f64(1.0 / 60.0));
+            let current_x = ((current_distance / total_distance) * distance_x + start_x) as i32;
+            let current_y = ((current_distance / total_distance) * distance_y + start_y) as i32;
+            self.move_to(current_x, current_y)?;
+            std::thread::sleep(std::time::Duration::from_millis(10));
         }
-
+        self.move_to(new_x as i32, new_y as i32)?;
         self.position = new_position;
 
         Ok(())
