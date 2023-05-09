@@ -60,6 +60,13 @@ impl MousePosition {
             .map_err(|_| MouseError::ConversionError("Failed to convert y to u32".to_string()))?;
         Ok((x_u32, y_u32))
     }
+
+    pub fn offset(&self, distance_x: i32, distance_y: i32) -> Self {
+        let x = self.x + distance_x;
+        let y = self.y + distance_y;
+
+        Self::new(x, y)
+    }
 }
 
 impl Default for MousePosition {
@@ -319,6 +326,15 @@ mod tests {
         let position = MousePosition::new(-1, 500);
         let result = position.to_u32();
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_mouse_position_offset() {
+        let position = MousePosition::new(100, 100);
+        let offset_position = position.offset(50, -50);
+
+        assert_eq!(offset_position.x, 150);
+        assert_eq!(offset_position.y, 50);
     }
 
     #[test]
