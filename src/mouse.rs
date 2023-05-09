@@ -328,7 +328,7 @@ impl Mouse {
         Ok(())
     }
 
-    pub fn drag_and_drop_with_duration(
+    pub fn drag_with_duration(
         &mut self,
         distance_x: i32,
         distance_y: i32,
@@ -763,7 +763,7 @@ mod tests {
         let duration = std::time::Duration::from_secs(1);
 
         mouse
-            .drag_and_drop_with_duration(distance_x, distance_y, duration)
+            .drag_with_duration(distance_x, distance_y, duration)
             .unwrap();
 
         let end_x = mouse.position.x;
@@ -783,7 +783,7 @@ mod tests {
 
         let start_time = std::time::Instant::now();
         mouse
-            .drag_and_drop_with_duration(distance_x, distance_y, duration)
+            .drag_with_duration(distance_x, distance_y, duration)
             .unwrap();
         let end_time = std::time::Instant::now();
 
