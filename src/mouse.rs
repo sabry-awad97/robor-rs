@@ -1,7 +1,7 @@
 use std::{fmt, io};
 use winapi::{
     shared::windef::POINT,
-    um::winuser::{GetCursorPos, GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN},
+    um::winuser::{GetCursorPos, GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN, SetCursorPos},
 };
 
 #[derive(Debug)]
@@ -80,6 +80,17 @@ impl Mouse {
     pub fn get_position(&self) -> (i32, i32) {
         (self.position.x, self.position.y)
     }
+
+    pub fn move_to(&mut self, x: i32, y: i32) -> Result<(), MouseError> {
+        let new_position = MousePosition::new(x, y);
+        if new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+        let (x_u32, y_u32) = new_position.to_u32()?;
+        unsafe { SetCursorPos(x_u32 as i32, y_u32 as i32) };
+        self.position = new_position;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -144,5 +155,13 @@ mod tests {
         let mouse = Mouse::new();
         let (x, y) = mouse.get_position();
         assert!(x >= 0 && y >= 0);
+    }
+
+    #[test]
+    fn test_mouse_move_to() {
+        let mut mouse = Mouse::new();
+        let result = mouse.move_to(100, 200);
+        assert!(result.is_ok());
+        assert_eq!(mouse.get_position(), (100, 200));
     }
 }
