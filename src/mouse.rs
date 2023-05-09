@@ -328,6 +328,44 @@ impl Mouse {
         Ok(())
     }
 
+    pub fn drag_and_drop_with_duration(
+        &mut self,
+        distance_x: i32,
+        distance_y: i32,
+        duration: std::time::Duration,
+    ) -> Result<(), MouseError> {
+        let current_position = &self.position;
+        let new_position = current_position.offset(distance_x, distance_y);
+
+        if current_position.is_out_of_bounds() || new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+
+        let (current_x, current_y) = current_position.to_u32()?;
+
+        let total_distance = ((distance_x.pow(2) + distance_y.pow(2)) as f64).sqrt();
+        let frames = (duration.as_secs_f64() * 60.0) as usize;
+        let distance_per_frame = total_distance / frames as f64;
+
+        let mut x = current_x as f64;
+        let mut y = current_y as f64;
+
+        for _ in 0..frames {
+            let dx = (distance_x as f64 * distance_per_frame / total_distance) as i32;
+            let dy = (distance_y as f64 * distance_per_frame / total_distance) as i32;
+
+            x += dx as f64;
+            y += dy as f64;
+
+            self.move_to(x as i32, y as i32)?;
+            std::thread::sleep(std::time::Duration::from_secs_f64(1.0 / 60.0));
+        }
+
+        self.position = new_position;
+
+        Ok(())
+    }
+
     pub fn simulate_mouse_button(&self, button: MouseButton, action: ButtonAction) {
         let (down_flag, up_flag) = match button {
             MouseButton::Left => (MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP),
@@ -710,5 +748,24 @@ mod tests {
         let (width, height) = mouse.get_screen_size();
         assert!(width > 0);
         assert!(height > 0);
+    }
+
+    #[test]
+    fn test_drag_and_drop_with_duration() {
+        let mut mouse = Mouse::new();
+        let start_x = mouse.position.x;
+        let start_y = mouse.position.y;
+        let distance_x = 100;
+        let distance_y = 50;
+        let duration = std::time::Duration::from_secs(1);
+
+        mouse
+            .drag_and_drop_with_duration(distance_x, distance_y, duration)
+            .unwrap();
+
+        let end_x = mouse.position.x;
+        let end_y = mouse.position.y;
+        assert_eq!(end_x, start_x + distance_x);
+        assert_eq!(end_y, start_y + distance_y);
     }
 }
