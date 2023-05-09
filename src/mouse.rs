@@ -366,6 +366,8 @@ impl Mouse {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
     use super::*;
 
     #[test]
@@ -678,5 +680,21 @@ mod tests {
             !mouse.is_middle_button_pressed(),
             "Middle button should be released"
         );
+    }
+
+    #[test]
+    fn test_on_click() {
+        let mut mouse = Mouse::new();
+        let counter = Arc::new(Mutex::new(0));
+        let counter_clone = counter.clone();
+        mouse.on(EventType::Click, move || {
+            let mut count = counter_clone.lock().unwrap();
+            *count += 1;
+        });
+        mouse.click().unwrap();
+        mouse.click().unwrap();
+        mouse.click().unwrap();
+        let count = counter.lock().unwrap();
+        assert_eq!(*count, 3);
     }
 }
