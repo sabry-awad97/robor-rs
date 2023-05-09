@@ -98,6 +98,37 @@ impl Mouse {
         self.move_to(new_x, new_y)?;
         Ok(())
     }
+
+    pub fn hover(&mut self, x: i32, y: i32, duration: std::time::Duration) -> Result<(), MouseError> {
+        let new_position = MousePosition::new(x, y);
+        if new_position.is_out_of_bounds() {
+            return Err(MouseError::OutOfBounds);
+        }
+
+        let current_position = self.get_position();
+
+        let start_x = current_position.0 as f64;
+        let start_y = current_position.1 as f64;
+
+        let distance_x = x as f64 - start_x;
+        let distance_y = y as f64 - start_y;
+
+        let total_distance = (distance_x.powi(2) + distance_y.powi(2)).sqrt();
+
+        let start_time = std::time::Instant::now();
+        while start_time.elapsed() < duration {
+            let elapsed = start_time.elapsed().as_secs_f64();
+            let progress = elapsed / duration.as_secs_f64();
+            let current_distance = total_distance * progress;
+
+            let current_x = ((current_distance / total_distance) * distance_x + start_x) as i32;
+            let current_y = ((current_distance / total_distance) * distance_y + start_y) as i32;
+            self.move_to(current_x, current_y)?;
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        self.move_to(x, y)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
