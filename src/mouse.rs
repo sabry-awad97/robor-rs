@@ -1,4 +1,28 @@
+use std::{fmt, io};
 use winapi::{shared::windef::POINT, um::winuser::GetCursorPos};
+
+#[derive(Debug)]
+pub enum MouseError {
+    ConversionError(String),
+    IoError(io::Error),
+    OutOfBounds,
+}
+
+impl fmt::Display for MouseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MouseError::ConversionError(msg) => write!(f, "Conversion error: {}", msg),
+            MouseError::IoError(err) => write!(f, "IO error: {}", err),
+            MouseError::OutOfBounds => write!(f, "Mouse position out of bounds"),
+        }
+    }
+}
+
+impl From<io::Error> for MouseError {
+    fn from(err: io::Error) -> Self {
+        MouseError::IoError(err)
+    }
+}
 
 pub struct MousePosition {
     pub x: i32,
