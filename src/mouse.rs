@@ -611,4 +611,24 @@ mod tests {
             "Left button should be released"
         );
     }
+
+    #[test]
+    fn test_simulate_right_button_press() {
+        let mouse = Mouse::new();
+        mouse.simulate_mouse_button(MouseButton::Right, ButtonAction::Press);
+        assert!(
+            mouse.is_right_button_pressed(),
+            "Right button should be pressed"
+        );
+    }
+
+    #[test]
+    fn test_simulate_right_button_release() {
+        let mouse = Mouse::new();
+        mouse.simulate_mouse_button(MouseButton::Right, ButtonAction::Release);
+        assert!(
+            !mouse.is_right_button_pressed(),
+            "Right button should be released"
+        );
+    }
 }
