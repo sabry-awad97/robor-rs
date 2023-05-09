@@ -310,7 +310,7 @@ impl Mouse {
         Ok(())
     }
 
-    pub fn drag_and_drop(&mut self, distance_x: i32, distance_y: i32) -> Result<(), MouseError> {
+    pub fn drag(&mut self, distance_x: i32, distance_y: i32) -> Result<(), MouseError> {
         let current_position = &self.position;
         let new_position = current_position.offset(distance_x, distance_y);
 
@@ -660,10 +660,10 @@ mod tests {
     }
 
     #[test]
-    fn test_drag_and_drop_within_bounds() {
+    fn test_drag_within_bounds() {
         let mut mouse = Mouse::new();
         mouse.move_to(100, 100).unwrap();
-        mouse.drag_and_drop(50, 50).unwrap();
+        mouse.drag(50, 50).unwrap();
         let (x, y) = mouse.get_position();
         assert_eq!(x, 150);
         assert_eq!(y, 150);
