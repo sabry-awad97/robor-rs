@@ -321,18 +321,18 @@ impl Mouse {
     }
 
     pub fn is_left_button_pressed(&self) -> bool {
-        let state = unsafe { GetAsyncKeyState(VK_LBUTTON) } as u16;
-        state & 0x8000u16 != 0
+        let state = unsafe { GetAsyncKeyState(VK_LBUTTON) } as u32;
+        state & 0x8001 != 0
     }
 
     pub fn is_right_button_pressed(&self) -> bool {
-        let state = unsafe { GetAsyncKeyState(VK_RBUTTON) } as u16;
-        state & 0x8000u16 != 0
+        let state = unsafe { GetAsyncKeyState(VK_RBUTTON) } as u32;
+        state & 0x8001 != 0
     }
 
     pub fn is_middle_button_pressed(&self) -> bool {
-        let state = unsafe { GetAsyncKeyState(VK_MBUTTON) } as u16;
-        state & 0x8000u16 != 0
+        let state = unsafe { GetAsyncKeyState(VK_MBUTTON) } as u32;
+        state & 0x8001 != 0
     }
 }
 
