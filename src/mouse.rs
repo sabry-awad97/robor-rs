@@ -1,3 +1,5 @@
+use winapi::{shared::windef::POINT, um::winuser::GetCursorPos};
+
 pub struct MousePosition {
     pub x: i32,
     pub y: i32,
@@ -6,6 +8,16 @@ pub struct MousePosition {
 impl MousePosition {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+}
+
+impl Default for MousePosition {
+    fn default() -> Self {
+        unsafe {
+            let mut point: POINT = std::mem::zeroed();
+            GetCursorPos(&mut point);
+            Self::new(point.x, point.y)
+        }
     }
 }
 
