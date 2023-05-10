@@ -29,3 +29,27 @@ impl EventEmitter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use super::*;
+
+    #[test]
+    fn test_on_and_emit() {
+        let mut emitter = EventEmitter::new();
+        let count = Arc::new(Mutex::new(0));
+
+        let count_cloned = count.clone();
+        emitter.on("event", move || {
+            *count_cloned.lock().unwrap() += 1;
+        });
+
+        emitter.emit("event");
+        assert_eq!(*count.lock().unwrap(), 1);
+
+        emitter.emit("event");
+        assert_eq!(*count.lock().unwrap(), 2);
+    }
+}
