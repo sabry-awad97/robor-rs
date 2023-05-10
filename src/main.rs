@@ -1,4 +1,4 @@
-use robor_rs::Mouse;
+use robot_rs::Mouse;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mouse = Mouse::new();
