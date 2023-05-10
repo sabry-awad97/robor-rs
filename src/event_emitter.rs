@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 pub struct EventEmitter {
-    listeners: HashMap<String, Vec<Box<dyn Fn()>>>,
+    listeners: HashMap<String, Vec<Box<dyn Fn() + Send + Sync>>>,
 }
 
 impl EventEmitter {
